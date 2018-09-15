@@ -7,13 +7,15 @@ t = 0
 
 def project_cloud(seed):
     np.random.seed(seed)
-    v = np.random.randn(2000000, 3) * 0.5
+    v = np.random.randn(2000000, 3)
+    v /= (v**2).sum(axis=1)[:,np.newaxis]
+    v *= 1.9
     v += np.array([-0.1, 0.2, 0.03])
 
     results = []
     z = v
     for i in range(6):
-        z = pow3d(z, 2) + v
+        z = pow3d(z, 7) + v
         results.append(z)
 
     # width = 640
@@ -23,7 +25,7 @@ def project_cloud(seed):
 
     imgs = []
     for z in results:
-        z *= 0.15
+        z *= 0.45
         img = np.histogram2d(
             z[:, 1] + 0.1 * z[:, 0], z[:, 2] - 0.2 * z[:, 0],
             range=[(-height/width, height/width), (-1, 1)],
@@ -40,7 +42,7 @@ for n in range(num_frames):
     p = multiprocessing.Pool(n_proc)  # New pool to sync global t
     # Save memory by reducing while mapping
     imgss = None
-    remaining = 130
+    remaining = 10000
     while remaining > 0:
         print("Runs remaining:", remaining)
         imgss_ = p.map(project_cloud, range(remaining, remaining + n_proc))
@@ -61,7 +63,7 @@ for n in range(num_frames):
         g += imgs[-3] + imgs[-2] * 0.5 + imgs[-4] * 0.5
         b += imgs[-1] + imgs[-2] * 0.5 + imgs[-5] * 0.5
 
-    weight = (r.mean() + g.mean() + b.mean()) * 5
+    weight = (r.mean() + g.mean() + b.mean()) * 3
 
     r /= weight
     g /= weight
